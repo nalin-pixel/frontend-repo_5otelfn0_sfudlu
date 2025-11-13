@@ -1,15 +1,38 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Instagram, TikTok, ArrowRight } from 'lucide-react'
+import { Instagram, TikTok, ArrowRight, ImagePlus, Link as LinkIcon, X } from 'lucide-react'
 import Spline from '@splinetool/react-spline'
 
-function FlameLogo() {
+function FlameLogo({ src }) {
+  const wrapperClasses = 'relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28'
+  if (src) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+        className={wrapperClasses}
+        aria-hidden
+      >
+        <motion.img
+          src={src}
+          alt="Brand Logo"
+          className="w-full h-full object-contain drop-shadow-[0_0_24px_rgba(255,200,80,0.35)]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        />
+        <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,170,60,0.20),transparent_60%)] blur-2xl" />
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 1.1, ease: 'easeOut' }}
-      className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
+      className={wrapperClasses}
       aria-hidden
     >
       <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -115,6 +138,37 @@ const drinks = [
 ]
 
 export default function App() {
+  const [logoSrc, setLogoSrc] = React.useState(() => {
+    try {
+      const url = new URL(window.location.href)
+      const param = url.searchParams.get('logo')
+      return param || null
+    } catch {
+      return null
+    }
+  })
+  const fileInputRef = React.useRef(null)
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setLogoSrc(url)
+  }
+
+  const handleUrl = () => {
+    const u = window.prompt('Logo URL einfügen (PNG/SVG mit transparentem Hintergrund empfohlen):')
+    if (!u) return
+    try {
+      const test = new URL(u)
+      setLogoSrc(test.href)
+    } catch {
+      alert('Ungültige URL')
+    }
+  }
+
+  const clearLogo = () => setLogoSrc(null)
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-amber-300 selection:text-black">
       {/* HERO */}
@@ -126,8 +180,41 @@ export default function App() {
           />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/90" />
+
+        {/* Logo Controls (subtil, top-right) */}
+        <div className="absolute right-4 top-4 z-20 flex items-center gap-2 opacity-80 hover:opacity-100">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-black/50 px-3 py-1.5 text-xs text-amber-100 backdrop-blur-md hover:border-amber-300 hover:bg-amber-500/10"
+          >
+            <ImagePlus className="h-3.5 w-3.5" /> Logo hinzufügen
+          </button>
+          <button
+            onClick={handleUrl}
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-black/50 px-3 py-1.5 text-xs text-amber-100 backdrop-blur-md hover:border-amber-300 hover:bg-amber-500/10"
+          >
+            <LinkIcon className="h-3.5 w-3.5" /> per Link
+          </button>
+          {logoSrc && (
+            <button
+              onClick={clearLogo}
+              aria-label="Logo entfernen"
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-400/30 bg-black/50 px-2.5 py-1.5 text-xs text-red-200/90 backdrop-blur-md hover:border-red-400 hover:bg-red-500/10"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml"
+            ref={fileInputRef}
+            onChange={handleFile}
+            className="hidden"
+          />
+        </div>
+
         <div className="relative z-10 flex h-full flex-col items-center justify-center gap-6 px-6 text-center">
-          <FlameLogo />
+          <FlameLogo src={logoSrc} />
           <motion.h1
             initial={{ y: 18, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -341,7 +428,7 @@ export default function App() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-white/80">
-              <FlameLogo />
+              <FlameLogo src={logoSrc} />
               <div>
                 <div className="text-sm font-semibold">Golden Flame × FAYA</div>
                 <div className="text-xs text-white/60">Premium Nightlife • Drinks • Culture</div>
